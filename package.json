@@ -1,0 +1,20 @@
+{
+  "name": "sonic-audio-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser-based audio effects studio with local processing and multilingual pages",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node preview.cjs",
+    "preview": "node preview.cjs",
+    "build": "node build-i18n.cjs",
+    "test": "node tests/mobile-studio.cjs && node tests/replacement.cjs && node tests/cloudflare-worker.cjs && node tests/mp3-export.cjs && node tests/google-analytics.cjs",
+    "deploy": "npx --yes wrangler@4.148.0 deploy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atharva236723/sonic-audio-studio.git"
+  }
+}
