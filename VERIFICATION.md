@@ -84,3 +84,11 @@ Google Analytics integration: verified one gtag.js loader and one configuration 
 Cloudflare Workers deployment: published sonic-audio-studio to https://sonic-audio-studio.atharva-shukla2367.workers.dev, version 4fe2406a-7fa9-4320-89ed-a77651f60536. Passed Wrangler dry-run, 600 Worker routing/SEO/error checks and 12 public HTTP/content checks. Live sitemap, robots, canonicals and hreflang use the Cloudflare origin. See CLOUDFLARE.md.
 
 Mobile studio v42: single-column layouts (up to 960px) move the same audio player node below settings, restoring it to the desktop column above 960px. Effect-card and chain-edit selections scroll to settings with the measured sticky-header offset through Lenis or native reduced-motion scrolling. Passed 164 layout/resize/navigation checks, 201 replacement checks, analytics checks on all 240 pages and 600 Worker checks. Published version 416b3a8b-7dd1-422b-bd47-e05451be3ab5; public editor pages and all four changed assets match the new files. Live browser visual inspection remains unavailable.
+
+
+## Creative and finishing effects — October 8, 2026
+Added Fade in/out, Peak normalization, Compressor, Chorus, Phaser, Tremolo and Bitcrusher. All 24 effects share dedicated pages, multi-effect settings, incremental checkpoints, progress reporting and MP3/WAV export. Generated 248 content pages plus 48 error pages across eight languages.
+
+195 real sample-level checks passed for new effects: neutral controls, fade endpoints and overlap, normalization target and silence, linked compression ratio, tremolo period, quantization, finite/bounded samples, source immutability, mono/stereo at 8/44.1 kHz, and incremental append/removal. Page checks passed 505 assertions. Existing mobile checks passed 220, replacement checks 315, Worker routing 768, and MP3 lifecycle 14. Analytics tags verified on all 296 pages. These checks do not establish perceived sound quality or physical-device/browser compatibility.
+
+Deployment verified: all 56 new localized effect pages and core entry pages returned HTTP 200; live application/engine assets match the local v43 bundle; live sitemap contains 248 content URLs. Version cedee768-a872-4081-93b8-b82bb996d2c6.

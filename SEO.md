@@ -14,3 +14,5 @@
 
 ## Dedicated effect search intent (v40)
 All 17 tools have independently crawlable landing URLs, effect-specific English titles/H1s and descriptions, localized headings/descriptions in all seven additional languages, a self-canonical and matching WebApplication/WebPage JSON-LD. Homepage metadata remains focused on Audio Studio and online audio editing. The effect catalog links directly to every tool. For example, slowed reverb queries target /effect-slowed.html, 8D queries target /effect-eightd.html and bass booster queries target /effect-bass.html. Search engines choose ranking, snippets and landing pages; these signals do not enforce query-based routing. Localhost is not publicly crawlable. Before indexing, deploy publicly, use the actual domain via SONIC_SITE_URL, verify domain ownership in the applicable webmaster tools and submit /sitemap.xml. No deployment or search-engine submission was performed in this task. Reference: https://developers.google.com/search/docs/appearance/title-link .
+
+Seven additional tools now have dedicated effect pages in all eight languages. The sitemap contains 248 indexable content URLs; all 48 error pages remain excluded.

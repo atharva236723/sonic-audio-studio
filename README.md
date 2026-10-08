@@ -34,6 +34,8 @@ your creation as MP3 or WAV. Audio processing stays on your device.
 | | Distortion | Trim |
 | | | 432 Hz tuning |
 
+Additional effects: **Fade in/out, peak normalization, compressor, chorus, phaser, tremolo, and bitcrusher**. Each has adjustable parameters and its own dedicated page, and can be included anywhere in a combination chain.
+
 ## Run locally
 
 Requires **Node.js 20 or newer**. The application and checks have no npm dependencies to install.
@@ -88,7 +90,7 @@ Deployment remains manual; CI only builds and tests. No credentials, OAuth token
 
 ## Verification
 
-GitHub Actions builds all multilingual pages and runs regression checks on pushes to `main` and pull requests. Included checks cover mobile player ordering and scroll behavior, audio replacement and editable settings, MP3 export lifecycle, production routing/SEO, and Analytics tag consistency across all 240 pages.
+GitHub Actions builds all multilingual pages and runs regression checks on pushes to `main` and pull requests. Included checks cover mobile player ordering and scroll behavior, audio replacement and editable settings, MP3 export lifecycle, production routing/SEO, and Analytics tag consistency across all 296 pages.
 
 These checks use Node.js and mocked browser interfaces. They do not replace listening tests or physical-device testing. See [VERIFICATION.md](VERIFICATION.md) for earlier signal checks and documented verification limits.
 

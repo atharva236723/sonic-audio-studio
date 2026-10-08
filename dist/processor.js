@@ -28,6 +28,58 @@ async function stretch(input,factor){
  }
  return out;
 }
+// Deterministic sample processors; original buffers are never modified.
+async function creative(input,id,controls,onProgress){
+ if(!['fade','normalize','compressor','chorus','phaser','tremolo','bitcrusher'].includes(id))return null;
+ const rate=input.sampleRate,n=input.length,channels=input.numberOfChannels,out=make(channels,n,rate);
+ const ins=Array.from({length:channels},(_,c)=>input.getChannelData(c)),outs=Array.from({length:channels},(_,c)=>out.getChannelData(c));
+ const [a,b,c,d,e]=controls;const block=32768;
+ let normalization=1;
+ if(id==='normalize'){
+  let peak=0;
+  for(let start=0;start<n;start+=block){for(let i=start;i<Math.min(n,start+block);i++)for(let ch=0;ch<channels;ch++)peak=Math.max(peak,Math.abs(ins[ch][i]));onProgress(.4*Math.min(n,start+block)/n);await pause();}
+  normalization=peak>0?Math.pow(10,a/20)/peak:1;
+ }
+ let fadeIn=Math.round(a*rate/1000),fadeOut=Math.round(b*rate/1000);
+ if(id==='fade'&&fadeIn+fadeOut>n){const scale=n/(fadeIn+fadeOut);fadeIn=Math.floor(fadeIn*scale);fadeOut=n-fadeIn;}
+ const ratio=b,attack=Math.exp(-1/(Math.max(1,c)*rate/1000)),release=Math.exp(-1/(Math.max(1,d)*rate/1000));let reduction=0;
+ const filterStates=Array.from({length:channels},()=>Array.from({length:6},()=>({x:0,y:0})));
+ const held=new Float64Array(channels);let holdPhase=1;
+ for(let start=0;start<n;start+=block){
+  for(let i=start;i<Math.min(n,start+block);i++){
+   let gain=1;
+   if(id==='fade'){if(fadeIn>0)gain*=Math.min(1,i/Math.max(1,fadeIn-1));if(fadeOut>0)gain*=Math.min(1,(n-1-i)/Math.max(1,fadeOut-1));}
+   if(id==='compressor'){
+    let peak=0;for(let ch=0;ch<channels;ch++)peak=Math.max(peak,Math.abs(ins[ch][i]));
+    const level=20*Math.log10(Math.max(1e-12,peak)),target=Math.max(0,level-a)*(1-1/ratio),smoothing=target>reduction?attack:release;
+    reduction=smoothing*reduction+(1-smoothing)*target;gain=Math.pow(10,(e-reduction)/20);
+   }
+   if(id==='tremolo')gain=1-b/100*(.5-.5*Math.cos(2*Math.PI*a*i/rate));
+   if(id==='bitcrusher'&&holdPhase>=1){holdPhase-=Math.floor(holdPhase);for(let ch=0;ch<channels;ch++)held[ch]=ins[ch][i];}
+   for(let ch=0;ch<channels;ch++){
+    const x=ins[ch][i];let y=x;
+    if(id==='fade'||id==='compressor'||id==='tremolo')y=x*gain;
+    if(id==='normalize')y=x*normalization;
+    if(id==='bitcrusher'){const levels=Math.pow(2,a-1);y=x*(1-c/100)+Math.round(held[ch]*levels)/levels*c/100;}
+    if(id==='chorus'){
+     const delay=(.015+b/1000*Math.sin(2*Math.PI*i/(rate*a/1000)+ch*Math.PI/2))*rate,pos=i-delay,j=Math.floor(pos),fraction=pos-j;
+     const delayed=(j>=0?ins[ch][j]:0)*(1-fraction)+(j+1>=0?ins[ch][j+1]:0)*fraction;
+     y=x*(1-c/100)+delayed*c/100;
+    }
+    if(id==='phaser'){
+     const sweep=Math.sin(2*Math.PI*i/(rate*a/1000)),frequency=Math.min(rate*.4,500*Math.pow(4,sweep*b/100)),t=Math.tan(Math.PI*frequency/rate),coefficient=(t-1)/(t+1);
+     let wet=x;for(const state of filterStates[ch]){const next=coefficient*wet+state.x-coefficient*state.y;state.x=wet;state.y=next;wet=next;}
+     y=x*(1-c/100)+wet*c/100;
+    }
+    outs[ch][i]=y;
+   }
+   if(id==='bitcrusher')holdPhase+=Math.min(rate,b)/rate;
+  }
+  onProgress((id==='normalize'?.4:0)+(id==='normalize'?.5:.9)*Math.min(n,start+block)/n);await pause();
+ }
+ return out;
+}
+
 async function render(input,chain,values,onProgress=()=>{}){
  if(!Offline)throw new Error('Use a browser that supports Web Audio processing.');
  let current=input;let completed=0;const total=chain.filter(id=>values[id]?.enabled&&id!=='loudness').length;
@@ -36,6 +88,7 @@ async function render(input,chain,values,onProgress=()=>{}){
  onProgress(total?completed/total*.9:0,id);
  try{
  const [a,b]=values[id].controls,rate=current.sampleRate,channels=current.numberOfChannels;
+ const additional=await creative(current,id,values[id].controls,fraction=>onProgress(total?(completed+fraction)/total*.9:0,id));if(additional){current=additional;continue;}
  if(id==='trim'){
  if(a>=b)throw new Error('Trim start must be before trim end.');
  const start=Math.floor(current.length*a/100),end=Math.max(start+1,Math.floor(current.length*b/100)),out=make(channels,end-start,rate);

@@ -1,7 +1,7 @@
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const root=__dirname,dist=path.join(root,'dist');
 const {languages,dictionaries}=require('./i18n/ui.cjs');
-const {names,details}=require('./i18n/effects.cjs');require('./i18n/extra.cjs');
+const {names,details}=require('./i18n/effects.cjs');require('./i18n/extra.cjs');require('./i18n/new-effects.cjs');
 const search=require('./i18n/search.cjs');
 const home=require('./i18n/home.cjs'),documents=require('./i18n/documents.cjs');
 const origin=(process.env.SONIC_SITE_URL||'https://sonic-audio-studio.atharva23.chatgpt.site').replace(/\/$/,'');
@@ -11,6 +11,7 @@ const ogLocales=['en_US','es_ES','ja_JP','fr_FR','de_DE','pt_BR','ko_KR','it_IT'
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const decode=s=>s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&#x([a-f0-9]+);/gi,(_,n)=>String.fromCodePoint(parseInt(n,16))).replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(+n));
 const effects=vm.runInNewContext(fs.readFileSync(path.join(dist,'effects.js'),'utf8')+';effects');
+require('./build-new-effects.cjs')();
 const files=fs.readdirSync(dist).filter(f=>f.endsWith('.html')&&!/^[45]\d{2}\.html$/.test(f)).sort();
 const route=(lang,file)=>'/'+(lang==='en'?'':lang+'/')+(file==='index.html'?'':file);
 const strip=h=>h.replace(/<!-- google-analytics -->[\s\S]*?<!-- \/google-analytics -->/g,'').replace(/<!-- i18n-head -->[\s\S]*?<!-- \/i18n-head -->/g,'').replace(/<!-- language-menu -->[\s\S]*?<!-- \/language-menu -->/g,'');
@@ -45,12 +46,12 @@ function documentPage(lang,type){
 }
 function metadata(file,lang,index){
   if(lang==='en'&&!file.startsWith('effect-')){
-    const source=english[file];return {title:file==='index.html'?'Audio Studio — Free Online Audio Editor | Sonic':decode(source.match(/<title>([\s\S]*?)<\/title>/)[1]),description:decode(source.match(/<meta name="description" content="([^"]*)"/)[1])};
+    const source=english[file];return {title:file==='index.html'?'Audio Studio — Free Online Audio Editor | Sonic':file==='effects.html'?'Explore '+effects.length+' Audio Effects — Sonic':decode(source.match(/<title>([\s\S]*?)<\/title>/)[1]),description:decode(source.match(/<meta name="description" content="([^"]*)"/)[1])};
   }
   const t=s=>dictionaries[lang][s]||s;
   let title,description;
   if(file==='index.html'){title=t('Audio Studio — Free Online Audio Editor')+' | Sonic';description=home[lang].intro;}
-  else if(file==='effects.html'){title=t('Explore 17 Audio Effects')+' — Sonic '+t('Online Audio Editor');description=home[lang].lead;}
+  else if(file==='effects.html'){title=t('Explore 17 Audio Effects').replace('17',String(effects.length))+' — Sonic '+t('Online Audio Editor');description=home[lang].lead;}
   else if(file==='studio.html'){title=t('Combine Audio Effects Online')+' — Sonic';description=home[lang].sections[5][1].split(/[.!。]/)[0]+'.';}
   else if(file.startsWith('effect-')){const id=file.slice(7,-5);title=lang==='en'?search[id][0]+' — Free Online Tool | Sonic':names[id][index]+' — '+t('Online Audio Editor')+' | Sonic';description=lang==='en'?search[id][1]:details[id][index]+' '+t('Upload audio, adjust the effect, preview and download MP3 or WAV.');}
   else {const type=file.slice(0,-5);title=t({about:'About us',contact:'Contact us',privacy:'Privacy policy',terms:'Terms & conditions'}[type])+' — Sonic Audio Studio';description=documents[lang][type].intro;}
@@ -116,12 +117,12 @@ for(const lang of languages){
       pageGraph[0].mainEntity={'@id':app['@id']};pageGraph.push(app);
     }
     html=html.replace('</head>','<script type="application/ld+json">'+JSON.stringify({'@context':'https://schema.org','@graph':pageGraph}).replace(/</g,'\\u003c')+'</script></head>');
-    html=html.replace(/\?v=(?:30|31|32|33|34|35|36|37|38|39|40|41)(?=")/g,'?v=42');
-    html=html.replace(/(src|href)="((?:vendor\/)?[a-z][a-z0-9.-]*\.(?:js|css)(?:\?[^" ]*)?)"/gi,(_,a,p)=>a+'="/'+p.replace(/\?v=\d+$/,'?v=42')+'"');
+    html=html.replace(/\?v=(?:30|31|32|33|34|35|36|37|38|39|40|41|42)(?=")/g,'?v=43');
+    html=html.replace(/(src|href)="((?:vendor\/)?[a-z][a-z0-9.-]*\.(?:js|css)(?:\?[^" ]*)?)"/gi,(_,a,p)=>a+'="/'+p.replace(/\?v=\d+$/,'?v=43')+'"');
     const alternates=languages.map(l=>'<link rel="alternate" hreflang="'+l+'" href="'+origin+route(l,file)+'">').join('\n')+'\n<link rel="alternate" hreflang="x-default" href="'+origin+route('en',file)+'">';
-    const extra='<!-- i18n-head --><link rel="stylesheet" href="/confirm.css?v=42"><script defer src="/confirm.js?v=42"></script><link rel="stylesheet" href="/activity.css?v=42"><script defer src="/activity.js?v=42"></script>'+alternates+languages.filter(l=>l!==lang).map(l=>'<meta property="og:locale:alternate" content="'+ogLocales[languages.indexOf(l)]+'">').join('')+'<link rel="stylesheet" href="/i18n.css?v=42">'+(lang==='en'?'':'<script src="/i18n/'+lang+'.js?v=42"></script>')+'<script src="/i18n.js?v=42"></script><!-- /i18n-head -->';
+    const extra='<!-- i18n-head --><link rel="stylesheet" href="/confirm.css?v=43"><script defer src="/confirm.js?v=43"></script><link rel="stylesheet" href="/activity.css?v=43"><script defer src="/activity.js?v=43"></script>'+alternates+languages.filter(l=>l!==lang).map(l=>'<meta property="og:locale:alternate" content="'+ogLocales[languages.indexOf(l)]+'">').join('')+'<link rel="stylesheet" href="/i18n.css?v=43">'+(lang==='en'?'':'<script src="/i18n/'+lang+'.js?v=43"></script>')+'<script src="/i18n.js?v=43"></script><!-- /i18n-head -->';
     html=html.replace('</head>',extra+'</head>').replace('</header>',menu(lang,file)+'</header>');
-    if(file==='studio.html'||file.startsWith('effect-')){html=html.replace(/<script src="\/mobile-studio\.js[^"]*"><\/script>/g,'');html=html.replace('</body>','<script src="/mobile-studio.js?v=42"></script></body>');}
+    if(file==='studio.html'||file.startsWith('effect-')){html=html.replace(/<script src="\/mobile-studio\.js[^"]*"><\/script>/g,'');html=html.replace('</body>','<script src="/mobile-studio.js?v=43"></script></body>');}
     html=html.replace('</head>',analyticsTag+'</head>');
     fs.writeFileSync(path.join(target,file),html);
   }
