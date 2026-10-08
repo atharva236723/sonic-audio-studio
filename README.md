@@ -7,10 +7,6 @@ your creation as MP3 or WAV. Audio processing stays on your device.
 
 [Try Audio Studio](https://sonic-audio-studio.atharva-shukla2367.workers.dev/)
 
-A browser-based audio editor for shaping music with 17 effects. Upload a track, adjust parameters, compare the original with the result, and download MP3 or WAV. Audio processing runs on the visitor's device.
-
-**[Open the live website](https://sonic-audio-studio.atharva-shukla2367.workers.dev/)** · **[Try the combination editor](https://sonic-audio-studio.atharva-shukla2367.workers.dev/studio.html?mode=combine)**
-
 ## Features
 
 - Dedicated pages for each effect, plus an editor for combining effects in order.
