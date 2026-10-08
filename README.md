@@ -1,5 +1,8 @@
 # Sonic Audio Studio
 
+![Audio Studio editor showing waveform, effects and controls](docs/assets/studio-preview.png)
+
+
 Shape your sound, right in your browser.
 
 Apply 17 audio effects, combine them your way, and download
