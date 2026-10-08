@@ -1,0 +1,10 @@
+
+.sonic-confirm{width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto;margin:auto;padding:32px;border:1px solid #cfc5e8;border-radius:24px;background:#fff;color:#242438;box-shadow:0 28px 90px #17112d40;animation:confirm-appear .2s ease-out}
+.sonic-confirm::backdrop{background:#11112280;backdrop-filter:blur(7px)}
+.confirm-symbol{display:grid;place-items:center;width:52px;height:52px;border-radius:17px;background:#f7edde;color:#a16c29;font-size:30px;font-weight:600;border:1px solid #eacfa54d}
+.sonic-confirm h2{margin:22px 0 12px;font-size:26px;line-height:1.25;letter-spacing:-.6px;color:inherit}
+.sonic-confirm p{margin:0;color:#696578;font-size:16px;line-height:1.65;overflow-wrap:anywhere}
+.confirm-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:28px}.confirm-actions button{padding:12px 18px;border-radius:11px;min-height:48px;font-size:15px;line-height:1.4;font-weight:600;flex:1}
+.confirm-cancel{background:#f5f3fa!important;border:1px solid #e4dfed!important;color:#4e4960!important}.confirm-cancel:hover{background:#ece8f6!important}.confirm-accept{background:#886047!important;border:1px solid #886047!important;color:#fff!important}.confirm-accept:hover{background:#734e39!important}
+[data-theme=dark] .sonic-confirm{background:#22232e;color:#f4f0ff;border-color:#494353}[data-theme=dark] .sonic-confirm p{color:#b7b2c7}[data-theme=dark] .confirm-symbol{background:#b7893e1f;color:#e5bb79;border-color:#b7893e40}[data-theme=dark] .confirm-cancel{background:#30313f!important;color:#ded9eb!important;border-color:#494653!important}[data-theme=dark] .confirm-cancel:hover{background:#3b3c4b!important}
+@keyframes confirm-appear{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.sonic-confirm{animation:none}}@media(max-width:420px){.sonic-confirm{padding:26px 22px}.confirm-actions{flex-direction:column-reverse}.sonic-confirm h2{font-size:23px}}
