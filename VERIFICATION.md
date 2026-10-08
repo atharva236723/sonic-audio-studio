@@ -92,3 +92,11 @@ Added Fade in/out, Peak normalization, Compressor, Chorus, Phaser, Tremolo and B
 195 real sample-level checks passed for new effects: neutral controls, fade endpoints and overlap, normalization target and silence, linked compression ratio, tremolo period, quantization, finite/bounded samples, source immutability, mono/stereo at 8/44.1 kHz, and incremental append/removal. Page checks passed 505 assertions. Existing mobile checks passed 220, replacement checks 315, Worker routing 768, and MP3 lifecycle 14. Analytics tags verified on all 296 pages. These checks do not establish perceived sound quality or physical-device/browser compatibility.
 
 Deployment verified: all 56 new localized effect pages and core entry pages returned HTTP 200; live application/engine assets match the local v43 bundle; live sitemap contains 248 content URLs. Version cedee768-a872-4081-93b8-b82bb996d2c6.
+
+
+## Preview, editing history and sound examples — October 8, 2026
+Added isolated 5/10/15-second previews with selectable source offset, cancel, progress, native original/processed players, stale-job protection and URL cleanup. Full result buffers, download URLs, revisions and main pipeline checkpoints are preserved. Undo/redo stores bounded settings snapshots, groups slider edits, discards redo on new changes and rebuilds existing full results using restored settings. Replacements and Reset clear history. Added locally synthesized six-second before/after examples for all 24 effects, with visible demonstration parameters and mutually exclusive playback. All editor and example controls are translated across eight languages.
+
+23 history/real-preview/cancellation/restore assertions, 181 workflow/example integration assertions and 3,712 multilingual markup/script assertions passed. Existing effect signal and replacement suites also passed. UI tests use mocked DOM interfaces; native browser visual inspection was attempted but unavailable because the computer-use runtime exited with a Windows sandbox initialization error. Physical-device interaction and subjective listening remain unverified for this update.
+
+Live verification: 32 editor/example pages returned HTTP 200 with v44 controls; all five workflow/app assets matched the tested files. Cloudflare version 51d80e59-716f-4b8a-ba86-131ca20d4070.

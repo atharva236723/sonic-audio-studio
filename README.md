@@ -15,6 +15,9 @@ your creation as MP3 or WAV. Audio processing stays on your device.
 - Dedicated pages for each effect, plus an editor for combining effects in order.
 - Incremental processing: completed stages are cached; changes rebuild only the affected stages.
 - Original/result comparison, clickable waveform seeking, and unlimited revisions.
+- Quick previews of 5, 10 or 15 seconds, with a selectable start time and independent comparison playback.
+- Undo/redo for effect choices, presets, enabled state and parameters; slider gestures are grouped.
+- Before-and-after examples for all 24 effects, generated locally from an original synthesized sample.
 - MP3 downloads at 192 kbps using a local encoding worker, or 16-bit WAV.
 - Responsive layouts, mobile navigation to effect parameters, light/dark themes, and reduced-motion support.
 - Animated processing progress, custom removal/leave confirmations, and contact-form feedback.
@@ -112,3 +115,11 @@ Browser codec support varies. Upload limits are 50 MB and 10 minutes, and longer
 ## Third-party notices
 
 Lenis is distributed with its MIT license. The unmodified lamejs encoder, its corresponding source, and LGPL notices are included in `dist/vendor/`. See [MP3-NOTICE.txt](dist/vendor/MP3-NOTICE.txt). No separate open-source license has been selected for the original application code.
+
+## Preview and editing history
+
+Quick preview processes an excerpt from the original through the current enabled chain in a separate pipeline. Full results, revisions and downloads remain unchanged. Timing-based effects restart on the excerpt; reverb tails and trim percentages can differ from the complete recording.
+
+Undo/redo restores effect configurations. If a full result exists, the editor rebuilds it with the restored settings; downloads stay disabled until it is ready. Source replacement and Reset start a new history. Use the buttons, Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y outside text fields.
+
+Each dedicated effect page includes a locally generated six-second before/after example. The displayed example settings are independent of the uploaded audio and editor settings. Equalizer and trim examples use explicitly shown non-neutral settings.

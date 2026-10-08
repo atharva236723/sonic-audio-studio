@@ -1,7 +1,7 @@
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const root=__dirname,dist=path.join(root,'dist');
 const {languages,dictionaries}=require('./i18n/ui.cjs');
-const {names,details}=require('./i18n/effects.cjs');require('./i18n/extra.cjs');require('./i18n/new-effects.cjs');
+const {names,details}=require('./i18n/effects.cjs');require('./i18n/extra.cjs');require('./i18n/new-effects.cjs');require('./i18n/workflow.cjs');
 const search=require('./i18n/search.cjs');
 const home=require('./i18n/home.cjs'),documents=require('./i18n/documents.cjs');
 const origin=(process.env.SONIC_SITE_URL||'https://sonic-audio-studio.atharva23.chatgpt.site').replace(/\/$/,'');
@@ -75,6 +75,16 @@ for(const lang of languages){
   const units=lang==='ja'?['秒','半音']:lang==='ko'?['초','반음']:lang==='es'?['segundos','semitonos']:lang==='fr'?['secondes','demi-tons']:lang==='de'?['Sekunden','Halbtöne']:lang==='pt'?['segundos','semitons']:['secondi','semitoni'];
   for(const file of files){
     let html=english[file];
+    if(file==='studio.html'||file.startsWith('effect-')){
+      html=html.replace(/<div class="workflow-tools"[\s\S]*?(?=<button class="primary" id="apply")/g,'');
+      html=html.replace('<button class="primary" id="apply"',"<div class=\"workflow-tools\" role=\"group\" aria-label=\"Edit history\"><button type=\"button\" id=\"undo-edit\" disabled>↶ Undo</button><button type=\"button\" id=\"redo-edit\" disabled>↷ Redo</button></div><section class=\"quick-preview\" id=\"quick-preview\" aria-labelledby=\"preview-title\"><h3 id=\"preview-title\">Quick preview</h3><div class=\"preview-fields\"><label for=\"preview-start\">Start time (seconds)<input id=\"preview-start\" type=\"number\" min=\"0\" max=\"0\" step=\"1\" value=\"0\" disabled></label><label for=\"preview-length\">Preview length<select id=\"preview-length\" disabled><option value=\"10\">10 seconds</option><option value=\"15\">15 seconds</option><option value=\"5\">5 seconds</option></select></label></div><div class=\"preview-actions\"><button type=\"button\" id=\"preview-run\" disabled>Preview effects</button><button type=\"button\" id=\"preview-cancel\" hidden>Cancel preview</button></div><progress id=\"preview-meter\" value=\"0\" max=\"100\" aria-label=\"Preview progress\" hidden></progress><p id=\"preview-status\" role=\"status\" aria-live=\"polite\">Preview a short section before processing the whole track.</p><p class=\"preview-hint\">Timing effects restart in the preview; tails and trimming can differ from the full track.</p><div class=\"comparison-players\" id=\"preview-players\" hidden><div><strong>Original section</strong><audio id=\"preview-original\" controls preload=\"none\" aria-label=\"Original preview section\"></audio></div><div><strong>With your effects</strong><audio id=\"preview-result\" controls preload=\"none\" aria-label=\"Processed preview section\"></audio></div></div></section>"+'<button class="primary" id="apply"');
+      html=html.replace(/<section class="sound-example"[\s\S]*?(?=<section class="effect-guide")/g,'');
+      if(file.startsWith('effect-'))html=html.replace('<section class="effect-guide"',"<section class=\"sound-example\" id=\"sound-example\" aria-labelledby=\"example-heading\"><h2 id=\"example-heading\">Hear the difference</h2><p>Try a before-and-after example using our original six-second sample. No upload needed.</p><p id=\"example-settings\" class=\"example-settings\"></p><div class=\"example-actions\"><button type=\"button\" id=\"example-generate\">Create audio example</button></div><progress id=\"example-meter\" value=\"0\" max=\"100\" aria-label=\"Example progress\" hidden></progress><p id=\"example-status\" class=\"example-status\" role=\"status\" aria-live=\"polite\">Generated locally with the same audio engine used for your files.</p><div class=\"comparison-players\" id=\"example-players\" hidden><div><strong>Before · Original sample</strong><audio id=\"example-before\" controls preload=\"none\" aria-label=\"Before effect example\"></audio></div><div><strong>After · Effect applied</strong><audio id=\"example-after\" controls preload=\"none\" aria-label=\"After effect example\"></audio></div></div></section>"+'<section class="effect-guide"');
+      if(file.startsWith('effect-')){html=html.replace(/<a class="example-jump"[^>]*>[\s\S]*?<\/a>/g,'');html=html.replace(/(<div class="title-row"><div>[\s\S]*?<\/p>)/,'$1<a class="example-jump" href="#sound-example">Hear an example</a>');}
+      html=html.replace(/<script src="\/(?:history|workflow|examples)\.js[^"]*"><\/script>/g,'').replace(/<link rel="stylesheet" href="\/workflow\.css[^"]*">/g,'');
+      html=html.replace('</head>','<link rel="stylesheet" href="/workflow.css?v=44"></head>').replace('</body>','<script src="/history.js?v=44"></script><script src="/workflow.js?v=44"></script>'+(file.startsWith('effect-')?'<script src="/examples.js?v=44"></script>':'')+'</body>');
+    }
+
     if(lang!=='en'){
       if(file==='index.html'){
         html=html.replace(/(<div class="hero-copy">[\s\S]*?<\/h1><p>)[\s\S]*?(<\/p>)/,(_,a,b)=>a+esc(home[lang].intro)+b);
@@ -117,12 +127,12 @@ for(const lang of languages){
       pageGraph[0].mainEntity={'@id':app['@id']};pageGraph.push(app);
     }
     html=html.replace('</head>','<script type="application/ld+json">'+JSON.stringify({'@context':'https://schema.org','@graph':pageGraph}).replace(/</g,'\\u003c')+'</script></head>');
-    html=html.replace(/\?v=(?:30|31|32|33|34|35|36|37|38|39|40|41|42)(?=")/g,'?v=43');
-    html=html.replace(/(src|href)="((?:vendor\/)?[a-z][a-z0-9.-]*\.(?:js|css)(?:\?[^" ]*)?)"/gi,(_,a,p)=>a+'="/'+p.replace(/\?v=\d+$/,'?v=43')+'"');
+    html=html.replace(/\?v=(?:30|31|32|33|34|35|36|37|38|39|40|41|42|43)(?=")/g,'?v=44');
+    html=html.replace(/(src|href)="((?:vendor\/)?[a-z][a-z0-9.-]*\.(?:js|css)(?:\?[^" ]*)?)"/gi,(_,a,p)=>a+'="/'+p.replace(/\?v=\d+$/,'?v=44')+'"');
     const alternates=languages.map(l=>'<link rel="alternate" hreflang="'+l+'" href="'+origin+route(l,file)+'">').join('\n')+'\n<link rel="alternate" hreflang="x-default" href="'+origin+route('en',file)+'">';
-    const extra='<!-- i18n-head --><link rel="stylesheet" href="/confirm.css?v=43"><script defer src="/confirm.js?v=43"></script><link rel="stylesheet" href="/activity.css?v=43"><script defer src="/activity.js?v=43"></script>'+alternates+languages.filter(l=>l!==lang).map(l=>'<meta property="og:locale:alternate" content="'+ogLocales[languages.indexOf(l)]+'">').join('')+'<link rel="stylesheet" href="/i18n.css?v=43">'+(lang==='en'?'':'<script src="/i18n/'+lang+'.js?v=43"></script>')+'<script src="/i18n.js?v=43"></script><!-- /i18n-head -->';
+    const extra='<!-- i18n-head --><link rel="stylesheet" href="/confirm.css?v=44"><script defer src="/confirm.js?v=44"></script><link rel="stylesheet" href="/activity.css?v=44"><script defer src="/activity.js?v=44"></script>'+alternates+languages.filter(l=>l!==lang).map(l=>'<meta property="og:locale:alternate" content="'+ogLocales[languages.indexOf(l)]+'">').join('')+'<link rel="stylesheet" href="/i18n.css?v=44">'+(lang==='en'?'':'<script src="/i18n/'+lang+'.js?v=44"></script>')+'<script src="/i18n.js?v=44"></script><!-- /i18n-head -->';
     html=html.replace('</head>',extra+'</head>').replace('</header>',menu(lang,file)+'</header>');
-    if(file==='studio.html'||file.startsWith('effect-')){html=html.replace(/<script src="\/mobile-studio\.js[^"]*"><\/script>/g,'');html=html.replace('</body>','<script src="/mobile-studio.js?v=43"></script></body>');}
+    if(file==='studio.html'||file.startsWith('effect-')){html=html.replace(/<script src="\/mobile-studio\.js[^"]*"><\/script>/g,'');html=html.replace('</body>','<script src="/mobile-studio.js?v=44"></script></body>');}
     html=html.replace('</head>',analyticsTag+'</head>');
     fs.writeFileSync(path.join(target,file),html);
   }

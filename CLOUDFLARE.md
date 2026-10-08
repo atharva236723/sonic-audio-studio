@@ -3,7 +3,7 @@
 Live site: https://sonic-audio-studio.atharva-shukla2367.workers.dev
 Worker: sonic-audio-studio
 Wrangler: 4.148.0
-Deployment version: cedee768-a872-4081-93b8-b82bb996d2c6
+Deployment version: 51d80e59-716f-4b8a-ba86-131ca20d4070
 
 Deployment configuration is wrangler.jsonc. The Worker serves dist through the ASSETS binding, preserves .html tool URLs and language directory homepages, handles localized error responses, and replaces the original registered hostname in HTML metadata, JSON-LD, sitemap.xml and robots.txt with the public request origin. An optional SITE_ORIGIN Worker variable can fix a preferred canonical origin if a custom domain is added later. The local static source still uses its registered fallback origin; deployed responses use the actual live hostname.
 

@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
 
-let originalBuffer=null, resultBuffer=null, resultBlob=null, resultUrl=null, revision=0, needsRebuild=false, busy=false, sourceName="audio", renderToken=0, activeRender=0, sessionEdited=false;
+let originalBuffer=null, resultBuffer=null, resultBlob=null, resultUrl=null, revision=0, needsRebuild=false, busy=false, sourceName="audio", renderToken=0, activeRender=0, previewOwner=0, sessionEdited=false;
 const pipeline=SonicDSP.createPipeline();
 const pageEffect=document.body.dataset.effect||'';
 let editingMode=new URLSearchParams(location.search).get('mode')==='single'?'single':'combine';
@@ -12,7 +12,7 @@ function syncTheme(){const dark=document.documentElement.dataset.theme==='dark';
 $('theme-toggle').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('sonic-theme',document.documentElement.dataset.theme)}catch{}syncTheme();};
 function notify(message){animateElement($('status'),'toast-in');$('status').textContent=message;$('status').style.display='block';clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('status').style.display='none',4500)}
 function renderEffects(){$('effects').innerHTML=effects.map(e=>`<button class="effect-card ${selected===e.id?'selected':''}" data-effect="${e.id}" aria-pressed="${chain.includes(e.id)&&values[e.id].enabled}"><span class="symbol">${e.icon}</span>${e.ai?'<span class="ai">AI</span>':''}<span class="dot"></span>${chain.includes(e.id)&&values[e.id].enabled?'<span class="included">✓ Included</span>':''}<strong>${e.name}</strong><span class="desc">${e.desc}</span></button>`).join('');document.querySelectorAll('[data-effect]').forEach(b=>b.onclick=()=>selectEffect(b.dataset.effect))}
-function selectEffect(id){if(pageEffect&&id!==pageEffect){window.SonicNavigation.go('effect-'+id+'.html');return;}sessionEdited=true;const added=!chain.includes(id);selected=id;if(editingMode==='single'){chain=[id];values[id].enabled=true;}else if(added){chain.push(id);values[id].enabled=true;}renderEffects();renderSettings();renderChain(added);window.SonicMobileStudio?.showSettings();}
+function selectEffect(id){if(busy||loading)return;if(pageEffect&&id!==pageEffect){window.SonicNavigation.go('effect-'+id+'.html');return;}sessionEdited=true;const added=!chain.includes(id);selected=id;if(editingMode==='single'){chain=[id];values[id].enabled=true;}else if(added){chain.push(id);values[id].enabled=true;}renderEffects();renderSettings();renderChain(added);window.SonicMobileStudio?.showSettings();window.SonicWorkflow?.changed();}
 const soundPresets={reverb:{'Vocal':[35,25],'Bathroom':[45,60],'Small room':[15,25],'Medium room':[45,35],'Large room':[75,45],'Church hall':[90,55],'Cathedral':[100,65]},bass:{'Very light':[3,140],'Light':[6,140],'Moderate':[12,140],'Heavy':[20,140],'Extreme':[30,140]}};
 function renderSettings(){animateElement($('settings-body'));if(!selected){$('settings-body').innerHTML='<div class="chain-empty">'+SonicI18n.translate('Select an effect to apply.')+'</div>';return;}const e=effects.find(e=>e.id===selected),v=values[e.id];$('settings-body').innerHTML=`<div class="selected-heading"><span>${e.icon}</span><h3>${e.name}</h3></div><p class="setting-description">${e.detail}</p>${soundPresets[e.id]?'<label class="range-label" for="sound-preset">Preset</label><select id="sound-preset"><option value="">Custom settings</option>'+Object.keys(soundPresets[e.id]).map(name=>'<option value="'+name+'">'+name+'</option>').join('')+'</select>':''}${e.controls.map((c,i)=>`<div class="setting-control"><label class="range-label" for="setting-${i}">${c[0]}<output id="value-${i}">${v.controls[i]}${c[4]}</output></label><input id="setting-${i}" type="range" min="${c[2]}" max="${c[3]}" value="${v.controls[i]}" step="${c[7]??(c[4]===' Hz'?10:1)}"><div class="range-extents"><span>${c[5]}</span><span>${c[6]}</span></div></div>`).join('')}<label class="toggle-row">Enable effect<input id="enabled" type="checkbox" ${v.enabled?'checked':''}></label><div class="info-box">${e.note}</div><button class="add-button" id="add">${chain.includes(e.id)?'Remove this effect':'+ Include this effect'}</button>`;if($('sound-preset'))$('sound-preset').value=v.preset||'';}
 
@@ -27,15 +27,15 @@ function changeSetting(event){
   const value=Number(target.value);if(!Number.isFinite(value))return;
   state.controls[index]=Math.max(control[2],Math.min(control[3],value));state.preset='';sessionEdited=true;
   if($('sound-preset'))$('sound-preset').value='';
-  $('value-'+index).textContent=state.controls[index]+control[4];markDirty();
+  $('value-'+index).textContent=state.controls[index]+control[4];markDirty();window.SonicWorkflow?.changed('control:'+effect.id+':'+index,event.type);
  }else if(event.type==='change'&&target.id==='sound-preset'){
   const preset=soundPresets[effect.id]?.[target.value];if(!preset)return;
-  state.controls=[...preset];state.preset=target.value;sessionEdited=true;markDirty();renderSettings();
+  state.controls=[...preset];state.preset=target.value;sessionEdited=true;markDirty();renderSettings();window.SonicWorkflow?.changed();
  }else if(event.type==='change'&&target.id==='enabled'){
   if(busy||loading){target.checked=state.enabled;return;}
   state.enabled=target.checked;sessionEdited=true;
   if(state.enabled&&!chain.includes(effect.id)){if(editingMode==='single')chain=[effect.id];else chain.push(effect.id);}
-  renderEffects();renderChain();if(!state.enabled)rebuildAfterRemoval();
+  renderEffects();renderChain();window.SonicWorkflow?.changed();if(!state.enabled)rebuildAfterRemoval();
  }
 }
 $('settings-body').addEventListener('input',changeSetting);
@@ -44,7 +44,7 @@ $('settings-body').addEventListener('click',event=>{
  if(!event.target.closest('#add')||busy||loading||!selected)return;
  if(chain.includes(selected)){removeEffect(selected);return;}
  if(editingMode==='single')chain=[selected];else chain.push(selected);
- values[selected].enabled=true;sessionEdited=true;renderEffects();renderChain();renderSettings();
+ values[selected].enabled=true;sessionEdited=true;renderEffects();renderChain();renderSettings();window.SonicWorkflow?.changed();
 });
 
 function renderChain(changed=true){if(changed)markDirty();$('count').textContent=chain.length;
@@ -70,7 +70,7 @@ async function removeEffect(id){
  sessionEdited=true;
  chain=chain.filter(effect=>effect!==id);
  if(selected===id)selected=chain[0]||'';
- renderEffects();renderChain();renderSettings();rebuildAfterRemoval();
+ renderEffects();renderChain();renderSettings();window.SonicWorkflow?.changed();rebuildAfterRemoval();
 }
 
 function time(t){if(!Number.isFinite(t))return '0:00';return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')}
@@ -82,7 +82,7 @@ function paintWave(){if(document.hidden)return;const c=$('wave'),r=c.getBounding
 
 async function loadAudio(file){
  if(file.size>50*1024*1024){notify('Please choose an audio file smaller than 50 MB.');return;}
- window.SonicMP3?.cancel();const ticket=++loadId;loading=true;renderToken++;activeRender=0;busy=false;window.SonicActivity?.close();document.querySelector('.settings').classList.remove('rendering');updateActions();audio.pause();$('play').disabled=true;$('demo').disabled=true;notify('Opening your audio…');
+ window.SonicWorkflow?.clearPreview();window.SonicExamples?.pause();window.SonicMP3?.cancel();const ticket=++loadId;loading=true;renderToken++;activeRender=0;busy=false;window.SonicActivity?.close();document.querySelector('.settings').classList.remove('rendering');updateActions();audio.pause();$('play').disabled=true;$('demo').disabled=true;notify('Opening your audio…');
  let ctx;
  try{
   const Offline=window.OfflineAudioContext||window.webkitOfflineAudioContext;
@@ -90,11 +90,11 @@ async function loadAudio(file){
   const decoded=await ctx.decodeAudioData(await file.arrayBuffer());if(ticket!==loadId)return;
   if(decoded.duration>600)throw new Error('Please use a clip under 10 minutes.');
   const nextUrl=URL.createObjectURL(file);
-  clearResult();animateElement($('file-info'));originalBuffer=decoded;sourceName=file.name;buffer=decoded;
+  window.SonicWorkflow?.clearPreview();clearResult();animateElement($('file-info'));originalBuffer=decoded;sourceName=file.name;buffer=decoded;
   if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=nextUrl;audio.src=objectUrl;
   $('filename').textContent=file.name;$('filemeta').textContent=(file.size/1024/1024).toFixed(2)+' MB · '+time(buffer.duration)+' · '+buffer.sampleRate/1000+' kHz';
   $('drop').hidden=true;$('drop').style.display='none';$('file-info').hidden=false;$('wave-empty').style.display='none';$('track-title').textContent=file.name;$('track-subtitle').textContent='Original audio · Local playback';
-  $('elapsed').textContent='0:00';$('seek').value=0;$('duration').textContent=time(buffer.duration);$('seek').disabled=false;$('play').disabled=false;$('play-label').textContent='Original audio';$('original').setAttribute('aria-pressed','true');$('processed').setAttribute('aria-pressed','false');draw();notify('Audio ready. Press play to listen.');
+  $('elapsed').textContent='0:00';$('seek').value=0;$('duration').textContent=time(buffer.duration);$('seek').disabled=false;$('play').disabled=false;$('play-label').textContent='Original audio';$('original').setAttribute('aria-pressed','true');$('processed').setAttribute('aria-pressed','false');draw();window.SonicWorkflow?.reset();notify('Audio ready. Press play to listen.');
  }catch(error){
   if(ticket===loadId){$('play').disabled=!buffer;notify(error.message?.includes('10 minutes')?error.message:'This file could not be decoded. Try a WAV or MP3 audio file.');}
  }finally{
@@ -105,9 +105,9 @@ async function loadAudio(file){
 }
 $('drop').onclick=()=>$('file').click();$('replace').onclick=()=>$('file').click();$('file').onchange=()=>{if($('file').files[0])loadAudio($('file').files[0]);$('file').value=''};
 ['dragenter','dragover'].forEach(name=>$('drop').addEventListener(name,e=>{e.preventDefault();$('drop').classList.add('drag')}));$('drop').ondragleave=()=>$('drop').classList.remove('drag');$('drop').ondrop=e=>{e.preventDefault();$('drop').classList.remove('drag');if(e.dataTransfer.files[0])loadAudio(e.dataTransfer.files[0])};
-$('play').onclick=async()=>{if(audio.paused){try{await audio.play()}catch{notify('Playback could not start. Please try another audio file.')}}else audio.pause()};audio.onplay=()=>{document.querySelector('.player').classList.add('playing');$('play').textContent='Ⅱ';$('play').setAttribute('aria-label','Pause audio')};audio.onpause=()=>{document.querySelector('.player').classList.remove('playing');$('play').textContent='▶';$('play').setAttribute('aria-label','Play audio')};audio.ontimeupdate=()=>{$('elapsed').textContent=time(audio.currentTime);$('seek').value=1000*audio.currentTime/(audio.duration||1);draw()};audio.onloadedmetadata=()=>$('duration').textContent=time(audio.duration);audio.onerror=()=>{if(audio.getAttribute('src'))notify('Audio playback is unavailable for this file.')};$('seek').oninput=e=>{if(Number.isFinite(audio.duration))audio.currentTime=Number(e.target.value)/1000*audio.duration};$('volume').oninput=e=>audio.volume=Number(e.target.value);$('restart').onclick=()=>{if(buffer)audio.currentTime=0};
+$('play').onclick=async()=>{window.SonicWorkflow?.pause();window.SonicExamples?.pause();if(audio.paused){try{await audio.play()}catch{notify('Playback could not start. Please try another audio file.')}}else audio.pause()};audio.onplay=()=>{document.querySelector('.player').classList.add('playing');$('play').textContent='Ⅱ';$('play').setAttribute('aria-label','Pause audio')};audio.onpause=()=>{document.querySelector('.player').classList.remove('playing');$('play').textContent='▶';$('play').setAttribute('aria-label','Play audio')};audio.ontimeupdate=()=>{$('elapsed').textContent=time(audio.currentTime);$('seek').value=1000*audio.currentTime/(audio.duration||1);draw()};audio.onloadedmetadata=()=>$('duration').textContent=time(audio.duration);audio.onerror=()=>{if(audio.getAttribute('src'))notify('Audio playback is unavailable for this file.')};$('seek').oninput=e=>{if(Number.isFinite(audio.duration))audio.currentTime=Number(e.target.value)/1000*audio.duration};$('volume').oninput=e=>audio.volume=Number(e.target.value);$('restart').onclick=()=>{if(buffer)audio.currentTime=0};
 $('demo').onclick=()=>{const rate=22050,seconds=12,n=rate*seconds,bytes=new ArrayBuffer(44+n*2),v=new DataView(bytes);const str=(o,s)=>[...s].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));str(0,'RIFF');v.setUint32(4,36+n*2,true);str(8,'WAVE');str(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);str(36,'data');v.setUint32(40,n*2,true);const notes=[261.63,329.63,392,493.88,440,392,329.63,293.66];for(let i=0;i<n;i++){const t=i/rate,beat=t% .5,f=notes[Math.floor(t*2)%notes.length],env=Math.exp(-beat*6)*Math.min(1,t*3)*Math.min(1,(seconds-t)*2);const val=(Math.sin(t*2*Math.PI*f)*.22+Math.sin(t*2*Math.PI*f/2)*.12+Math.sin(t*2*Math.PI*f*2)*.035)*env;v.setInt16(44+i*2,val*32767,true)}loadAudio(new File([bytes],'Midnight keys — sample.wav',{type:'audio/wav'}))};
-$('reset').onclick=()=>{loadId++;renderToken++;activeRender=0;busy=false;window.SonicActivity?.close();originalBuffer=null;clearResult();loading=false;audio.pause();audio.removeAttribute('src');audio.load();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=null;buffer=null;chain=pageEffect?[pageEffect]:editingMode==='single'?['reverb']:[];effects.forEach(e=>values[e.id]={controls:e.controls.map(c=>c[1]),enabled:true});selected=chain[0]||'';$('drop').hidden=false;$('drop').style.display='flex';$('file-info').hidden=true;$('wave-empty').style.display='grid';$('track-title').textContent=SonicI18n.translate('Your audio canvas');$('track-subtitle').textContent='Upload a file or try the sample to listen';$('elapsed').textContent=$('duration').textContent='0:00';$('seek').value=0;$('seek').disabled=true;$('play').disabled=true;$('demo').disabled=false;$('volume').value=.8;audio.volume=.8;$('play-label').textContent='Ready when you are';renderEffects();renderSettings();renderChain();draw();sessionEdited=false;notify('Session reset.')};
+$('reset').onclick=()=>{loadId++;renderToken++;activeRender=0;busy=false;window.SonicActivity?.close();originalBuffer=null;clearResult();loading=false;audio.pause();audio.removeAttribute('src');audio.load();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=null;buffer=null;chain=pageEffect?[pageEffect]:editingMode==='single'?['reverb']:[];effects.forEach(e=>values[e.id]={controls:e.controls.map(c=>c[1]),enabled:true});selected=chain[0]||'';$('drop').hidden=false;$('drop').style.display='flex';$('file-info').hidden=true;$('wave-empty').style.display='grid';$('track-title').textContent=SonicI18n.translate('Your audio canvas');$('track-subtitle').textContent='Upload a file or try the sample to listen';$('elapsed').textContent=$('duration').textContent='0:00';$('seek').value=0;$('seek').disabled=true;$('play').disabled=true;$('demo').disabled=false;$('volume').value=.8;audio.volume=.8;$('play-label').textContent='Ready when you are';renderEffects();renderSettings();renderChain();draw();sessionEdited=false;window.SonicWorkflow?.reset();notify('Session reset.')};
 if($('help'))$('help').onclick=()=>$('guide').showModal();$('close-help').onclick=$('got-it').onclick=()=>$('guide').close();window.addEventListener('resize',draw);renderEffects();renderSettings();renderChain();draw();
 if(document.modelContext?.registerTool){try{Promise.resolve(document.modelContext.registerTool({name:'select_audio_effect',description:'Include an effect and open its settings. Click Apply effects to render audio.',inputSchema:{type:'object',properties:{effect:{type:'string',enum:effects.map(e=>e.id)}},required:['effect'],additionalProperties:false},annotations:{readOnlyHint:false},execute(input){if(!input||!effects.some(e=>e.id===input.effect))throw new Error('Unknown effect');selectEffect(input.effect);return {selectedEffect:selected,processingConnected:true}}})).catch(()=>{})}catch{}}
 function updateActions(){
@@ -116,11 +116,12 @@ function updateActions(){
  $('original').disabled=!originalBuffer||busy||loading;
  $('processed').disabled=!resultBuffer||needsRebuild||busy||loading;
  $('apply').textContent=busy?'Processing…':'Apply effects';
+ window.SonicWorkflow?.refresh();
  const format=$('output-format')?.value||'wav';$('export').textContent=SonicI18n.translate(format==='mp3'?'↓ Download MP3':'↓ Download WAV');
 }
 function markDirty(){if(!$('process-state'))return;$('process-state').textContent=originalBuffer&&!chain.some(id=>values[id].enabled)?'Select an effect first. Download keeps your last applied result.':resultBuffer?(editingMode==='combine'?'Apply to process new or changed effects. Completed effects are reused. Download keeps your last applied result.':'Settings changed? Apply again to update your result. Download keeps the last applied version.'):originalBuffer?(chain.some(id=>values[id].enabled)?'Ready to apply: '+chain.filter(id=>values[id].enabled).map(id=>effects.find(e=>e.id===id).name).join(', '):'Select an effect to apply.'):'Upload audio to get started.';updateActions();}
 function clearResult(){window.SonicMP3?.cancel();needsRebuild=false;pipeline.reset();renderToken++;$('render-progress').hidden=true;document.querySelector('.settings').classList.remove('rendering','render-complete');resultBuffer=null;resultBlob=null;revision=0;if(resultUrl)URL.revokeObjectURL(resultUrl);resultUrl=null;markDirty();}
-function listenTo(result){if(!(result?resultBuffer:originalBuffer))return;audio.pause();$('play').textContent='▶';$('play').setAttribute('aria-label','Play audio');buffer=result?resultBuffer:originalBuffer;audio.src=result?resultUrl:objectUrl;$('elapsed').textContent='0:00';$('seek').value=0;$('duration').textContent=time(buffer.duration);$('track-subtitle').textContent=result?'Processed audio · Revision '+revision:'Original audio · Unchanged';$('play-label').textContent=result?'Result · Revision '+revision:'Original audio';$('original').setAttribute('aria-pressed',String(!result));$('processed').setAttribute('aria-pressed',String(result));draw();}
+function listenTo(result){window.SonicWorkflow?.pause();window.SonicExamples?.pause();if(!(result?resultBuffer:originalBuffer))return;audio.pause();$('play').textContent='▶';$('play').setAttribute('aria-label','Play audio');buffer=result?resultBuffer:originalBuffer;audio.src=result?resultUrl:objectUrl;$('elapsed').textContent='0:00';$('seek').value=0;$('duration').textContent=time(buffer.duration);$('track-subtitle').textContent=result?'Processed audio · Revision '+revision:'Original audio · Unchanged';$('play-label').textContent=result?'Result · Revision '+revision:'Original audio';$('original').setAttribute('aria-pressed',String(!result));$('processed').setAttribute('aria-pressed',String(result));draw();}
 $('original').onclick=()=>listenTo(false);$('processed').onclick=()=>listenTo(true);
 async function applyEffects({allowEmpty=false}={}){
  if(!originalBuffer||busy||loading)return;
@@ -147,9 +148,36 @@ syncTheme();
 
 if(window.ResizeObserver)new ResizeObserver(draw).observe($('wave'));document.addEventListener('visibilitychange',()=>{if(!document.hidden)draw()});
 
-function setEditingMode(mode){if(pageEffect)mode='single';editingMode=mode;if(mode==='single'&&chain.length>1){chain=[chain.includes(selected)?selected:chain[0]];selected=chain[0];}const single=mode==='single';$('single-mode').setAttribute('aria-pressed',String(single));$('combine-mode').setAttribute('aria-pressed',String(!single));document.querySelector('.effects-note').textContent=single?'Choose an effect, adjust it, then apply. Choosing another effect replaces your selection. Revisions start from your original.':'Effects run in the order shown. Apply, then add another effect to build on your result. Completed effects are reused; changing an earlier effect updates it and the effects after it.';const url=new URL(location.href);url.searchParams.set('mode',mode);history.replaceState(null,'',url);renderEffects();renderSettings();renderChain();}
+function setEditingMode(mode){if(pageEffect)mode='single';editingMode=mode;if(mode==='single'&&chain.length>1){chain=[chain.includes(selected)?selected:chain[0]];selected=chain[0];}const single=mode==='single';$('single-mode').setAttribute('aria-pressed',String(single));$('combine-mode').setAttribute('aria-pressed',String(!single));document.querySelector('.effects-note').textContent=single?'Choose an effect, adjust it, then apply. Choosing another effect replaces your selection. Revisions start from your original.':'Effects run in the order shown. Apply, then add another effect to build on your result. Completed effects are reused; changing an earlier effect updates it and the effects after it.';const url=new URL(location.href);url.searchParams.set('mode',mode);history.replaceState(null,'',url);renderEffects();renderSettings();renderChain();window.SonicWorkflow?.changed();}
 $('single-mode').onclick=()=>{window.SonicNavigation.go('effects.html')};$('combine-mode').onclick=()=>setEditingMode('combine');setEditingMode(editingMode);
 
-window.SonicStudio={refreshDownload:updateActions,getExport:()=>resultBuffer&&!needsRebuild&&!busy&&!loading?{buffer:resultBuffer,name:sourceName,revision}:null,hasChanges:()=>Boolean(originalBuffer||loading||busy||sessionEdited||(editingMode==='combine'&&chain.length))};
+window.SonicStudio={refreshDownload:updateActions,getExport:()=>resultBuffer&&!needsRebuild&&!busy&&!loading?{buffer:resultBuffer,name:sourceName,revision}:null,getState:()=>({mode:editingMode,selected,chain:[...chain],values:JSON.parse(JSON.stringify(values))}),isWorking:()=>busy||loading,getSource:()=>originalBuffer,pausePlayback:()=>audio.pause(),restoreState:restoreEditorState,preview:previewEffects,cancelPreview:cancelPreview,hasChanges:()=>Boolean(originalBuffer||loading||busy||sessionEdited||(editingMode==='combine'&&chain.length))};
 document.addEventListener('input',event=>{if(event.target.matches('#settings-body input, #settings-body select'))sessionEdited=true;});
 document.addEventListener('change',event=>{if(event.target.matches('#settings-body input, #settings-body select'))sessionEdited=true;});
+
+// Settings history stores small snapshots; audio remains immutable and is rebuilt through the existing pipeline.
+function restoreEditorState(state){
+ if(busy||loading)return false;
+ const hadResult=Boolean(resultBuffer);editingMode=pageEffect?'single':state.mode;chain=[...state.chain];selected=state.selected;values=JSON.parse(JSON.stringify(state.values));setEditingMode(editingMode);sessionEdited=true;
+ window.SonicWorkflow?.clearPreview();renderEffects();renderSettings();renderChain();
+ if(hadResult){needsRebuild=true;listenTo(false);updateActions();applyEffects({allowEmpty:true});}else markDirty();
+ return true;
+}
+async function previewEffects({start=0,duration=10,onProgress=()=>{}}={}){
+ if(!originalBuffer||busy||loading)throw new Error('Upload audio and wait for processing to finish.');
+ const steps=chain.filter(id=>values[id].enabled);if(!steps.length)throw new Error('Select at least one enabled effect first.');
+ const source=originalBuffer,snapshot=JSON.parse(JSON.stringify(values)),rate=source.sampleRate;
+ start=Math.max(0,Math.min(Number(start)||0,Math.max(0,source.duration-1/rate)));duration=Math.max(1,Math.min(15,Number(duration)||10));
+ const offset=Math.min(source.length-1,Math.floor(start*rate)),length=Math.min(source.length-offset,Math.round(duration*rate));
+ const Offline=window.OfflineAudioContext||window.webkitOfflineAudioContext,clip=new Offline(source.numberOfChannels,1,rate).createBuffer(source.numberOfChannels,length,rate);
+ for(let c=0;c<source.numberOfChannels;c++)clip.getChannelData(c).set(source.getChannelData(c).subarray(offset,offset+length));
+ const ticket=++renderToken;busy=true;activeRender=ticket;previewOwner=ticket;audio.pause();updateActions();
+ const current=()=>ticket===renderToken&&source===originalBuffer;
+ try{
+  onProgress(0);const previewPipeline=SonicDSP.createPipeline(0);const outcome=editingMode==='combine'?await previewPipeline.render(clip,steps,snapshot,fraction=>{if(current())onProgress(fraction*.9);},current):{buffer:await SonicDSP.render(clip,steps,snapshot,fraction=>{if(current())onProgress(fraction*.9);})};
+  if(!current())return null;const original=await SonicDSP.wavAsync(clip);if(!current())return null;const processed=await SonicDSP.wavAsync(outcome.buffer,fraction=>{if(current())onProgress(.9+.1*fraction);});
+  if(!current())return null;return {original,processed,start:offset/rate,duration:clip.duration,steps:[...steps]};
+ }finally{if(previewOwner===ticket)previewOwner=0;if(activeRender===ticket){activeRender=0;busy=false;updateActions();}}
+}
+
+function cancelPreview(){if(previewOwner&&activeRender===previewOwner){renderToken++;activeRender=0;previewOwner=0;busy=false;updateActions();}}
