@@ -123,3 +123,7 @@ Quick preview processes an excerpt from the original through the current enabled
 Undo/redo restores effect configurations. If a full result exists, the editor rebuilds it with the restored settings; downloads stay disabled until it is ready. Source replacement and Reset start a new history. Use the buttons, Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y outside text fields.
 
 Each dedicated effect page includes a locally generated six-second before/after example. The displayed example settings are independent of the uploaded audio and editor settings. Equalizer and trim examples use explicitly shown non-neutral settings.
+
+## Export quality
+
+Choose MP3 at 128, 192 (default), 256 or 320 kbps, or 16-bit WAV. Rename the download before saving. MP3 size is estimated until encoding finishes; WAV size is calculated from the result samples. Changing bitrate re-encodes the finished result without rerunning effects. Repeated downloads of the same result and bitrate reuse the cached MP3. Low sample rates are resampled to 48 kHz for the requested MPEG-1 bitrate. Higher bitrate does not restore detail already missing from the uploaded file.

@@ -3,3 +3,5 @@
 .sound-example progress[hidden]{display:none}[data-theme=dark] .comparison-players audio{color-scheme:dark}
 
 .example-jump{display:inline-flex;align-items:center;margin-top:8px;padding:9px 14px;border-radius:12px;background:rgba(107,123,220,.13);color:#5a6bc5;font-size:14px;font-weight:650;text-decoration:none}[data-theme=dark] .example-jump{color:#bdc7ff;background:rgba(135,150,238,.15)}
+
+.export-options{display:grid;gap:12px;margin:16px 0}.export-options label{display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:600}.export-options input,.export-options select{width:100%;min-width:0;padding:11px;border:1px solid #cad1df;border-radius:10px;font:inherit;background:#fff;color:#263044}.export-options .small{margin:0;line-height:1.6}.export-options [hidden]{display:none}[data-theme=dark] .export-options input,[data-theme=dark] .export-options select{background:#252b3a;color:#f0f2fa;border-color:#424b62}

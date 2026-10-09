@@ -100,3 +100,9 @@ Added isolated 5/10/15-second previews with selectable source offset, cancel, pr
 23 history/real-preview/cancellation/restore assertions, 181 workflow/example integration assertions and 3,712 multilingual markup/script assertions passed. Existing effect signal and replacement suites also passed. UI tests use mocked DOM interfaces; native browser visual inspection was attempted but unavailable because the computer-use runtime exited with a Windows sandbox initialization error. Physical-device interaction and subjective listening remain unverified for this update.
 
 Live verification: 32 editor/example pages returned HTTP 200 with v44 controls; all five workflow/app assets matched the tested files. Cloudflare version 51d80e59-716f-4b8a-ba86-131ca20d4070.
+
+
+## Export quality options — October 9, 2026
+Added MP3 choices at 128/192/256/320 kbps, sanitized editable filenames, estimated MP3 size, actual encoded size after completion and exact 16-bit WAV size. Encoding cache includes both result buffer and bitrate; filename edits do not re-encode. MP3 rates below 32 kHz are resampled to 48 kHz so the requested bitrate is supported. All controls are localized and present once on every editor. 819 export checks passed, including real LAME output frame bitrate verification for all four qualities.
+
+Live export controls and v45 encoder assets verified after deployment. Cloudflare version e8790abf-4785-4c2e-bc77-2455e2838567.
