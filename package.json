@@ -10,7 +10,7 @@
     "dev": "node preview.cjs",
     "preview": "node preview.cjs",
     "build": "node build-i18n.cjs",
-    "test": "node tests/mobile-studio.cjs && node tests/replacement.cjs && node tests/cloudflare-worker.cjs && node tests/mp3-export.cjs && node tests/google-analytics.cjs && node tests/new-effects.cjs && node tests/new-effect-pages.cjs && node tests/workflow.cjs && node tests/workflow-ui.cjs && node tests/workflow-pages.cjs && node tests/export-options.cjs",
+    "test": "node tests/mobile-studio.cjs && node tests/replacement.cjs && node tests/cloudflare-worker.cjs && node tests/mp3-export.cjs && node tests/google-analytics.cjs && node tests/new-effects.cjs && node tests/new-effect-pages.cjs && node tests/workflow.cjs && node tests/workflow-ui.cjs && node tests/workflow-pages.cjs && node tests/export-options.cjs && node tests/waveform-scrub.cjs",
     "deploy": "npx --yes wrangler@4.148.0 deploy"
   },
   "repository": {

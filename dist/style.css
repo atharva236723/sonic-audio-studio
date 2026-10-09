@@ -6,7 +6,7 @@
 
 .included{display:block;font-size:11px;color:#167347;margin:5px 0}.effect-card{min-height:148px}
 
-#wave{cursor:crosshair}#wave-empty{pointer-events:none}
+#wave{cursor:grab;touch-action:pan-y;user-select:none}#wave.scrubbing{cursor:grabbing;touch-action:none}#wave-empty{pointer-events:none}
 
 #sound-preset{width:100%;padding:10px;margin:8px 0 20px;border:1px solid #ddd;border-radius:6px;background:white;color:#171717;font:inherit}
 

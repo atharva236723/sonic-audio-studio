@@ -137,6 +137,7 @@ for(const lang of languages){
     html=html.replace('</head>',extra+'</head>').replace('</header>',menu(lang,file)+'</header>');
     if(file==='studio.html'||file.startsWith('effect-')){html=html.replace(/<script src="\/mobile-studio\.js[^"]*"><\/script>/g,'');html=html.replace('</body>','<script src="/mobile-studio.js?v=46"></script></body>');}
     html=html.replace(/<link rel="stylesheet" href="\/dropdowns\.css[^"]*">/g,'');
+    html=html.replace(/(app\.js|style\.css)\?v=\d+/g,'$1?v=47');
     html=html.replace('</head>','<link rel="stylesheet" href="/dropdowns.css?v=46">'+analyticsTag+'</head>');
     fs.writeFileSync(path.join(target,file),html);
   }

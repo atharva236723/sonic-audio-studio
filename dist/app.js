@@ -136,13 +136,28 @@ $('apply').onclick=()=>applyEffects();
 updateActions();
 
 // Seek within whichever source is currently selected, without changing play/pause state.
-$('wave').addEventListener('click',event=>{
- if(!buffer||loading||busy||!Number.isFinite(audio.duration)||audio.duration<=0)return;
- const rect=$('wave').getBoundingClientRect();if(!rect.width)return;
+const wave=$('wave');let wavePointer=null;
+function seekWave(event){
+ if(!buffer||loading||busy||!Number.isFinite(audio.duration)||audio.duration<=0)return false;
+ const rect=wave.getBoundingClientRect();if(!rect.width)return false;
  const fraction=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));
  audio.currentTime=fraction*audio.duration;
- $('seek').value=fraction*1000;$('elapsed').textContent=time(audio.currentTime);draw();
+ $('seek').value=fraction*1000;$('elapsed').textContent=time(audio.currentTime);draw();return true;
+}
+wave.addEventListener('pointerdown',event=>{
+ if(wavePointer!==null||event.isPrimary===false||event.button!==0||!seekWave(event))return;
+ event.preventDefault();wavePointer=event.pointerId;wave.setPointerCapture(event.pointerId);wave.classList.add('scrubbing');
 });
+wave.addEventListener('pointermove',event=>{if(event.pointerId===wavePointer)seekWave(event);});
+function finishWaveScrub(event){
+ if(event.pointerId!==wavePointer)return;
+ if(event.type==='pointerup')seekWave(event);
+ wavePointer=null;wave.classList.remove('scrubbing');
+ if(wave.hasPointerCapture(event.pointerId))wave.releasePointerCapture(event.pointerId);
+}
+wave.addEventListener('pointerup',finishWaveScrub);
+wave.addEventListener('pointercancel',finishWaveScrub);
+wave.addEventListener('lostpointercapture',finishWaveScrub);
 
 syncTheme();
 
