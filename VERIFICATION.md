@@ -106,3 +106,11 @@ Live verification: 32 editor/example pages returned HTTP 200 with v44 controls; 
 Added MP3 choices at 128/192/256/320 kbps, sanitized editable filenames, estimated MP3 size, actual encoded size after completion and exact 16-bit WAV size. Encoding cache includes both result buffer and bitrate; filename edits do not re-encode. MP3 rates below 32 kHz are resampled to 48 kHz so the requested bitrate is supported. All controls are localized and present once on every editor. 819 export checks passed, including real LAME output frame bitrate verification for all four qualities.
 
 Live export controls and v45 encoder assets verified after deployment. Cloudflare version e8790abf-4785-4c2e-bc77-2455e2838567.
+
+Live export controls and v45 encoder assets verified after deployment. Cloudflare version e8790abf-4785-4c2e-bc77-2455e2838567.
+
+
+## Shared dropdown appearance — October 9, 2026
+Added dropdowns.css to all 296 pages: consistent rounded controls, custom chevron, coordinated light/dark colors, hover/focus/disabled states, 48px touch targets and improved language-menu items. Native select behavior remains intact; forced-colors and reduced-motion preferences are respected. Generated pages verified with one shared stylesheet each. Native picker presentation still follows browser/device conventions. Visual browser inspection remains unavailable due the previously documented runtime sandbox failure.
+
+Live shared dropdown stylesheet and v46 page references verified. Cloudflare version c1ca9e7b-c862-48a9-8cac-7de2524dab30.

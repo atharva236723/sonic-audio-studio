@@ -85,7 +85,7 @@ for(const lang of languages){
       if(file.startsWith('effect-'))html=html.replace('<section class="effect-guide"',"<section class=\"sound-example\" id=\"sound-example\" aria-labelledby=\"example-heading\"><h2 id=\"example-heading\">Hear the difference</h2><p>Try a before-and-after example using our original six-second sample. No upload needed.</p><p id=\"example-settings\" class=\"example-settings\"></p><div class=\"example-actions\"><button type=\"button\" id=\"example-generate\">Create audio example</button></div><progress id=\"example-meter\" value=\"0\" max=\"100\" aria-label=\"Example progress\" hidden></progress><p id=\"example-status\" class=\"example-status\" role=\"status\" aria-live=\"polite\">Generated locally with the same audio engine used for your files.</p><div class=\"comparison-players\" id=\"example-players\" hidden><div><strong>Before · Original sample</strong><audio id=\"example-before\" controls preload=\"none\" aria-label=\"Before effect example\"></audio></div><div><strong>After · Effect applied</strong><audio id=\"example-after\" controls preload=\"none\" aria-label=\"After effect example\"></audio></div></div></section>"+'<section class="effect-guide"');
       if(file.startsWith('effect-')){html=html.replace(/<a class="example-jump"[^>]*>[\s\S]*?<\/a>/g,'');html=html.replace(/(<div class="title-row"><div>[\s\S]*?<\/p>)/,'$1<a class="example-jump" href="#sound-example">Hear an example</a>');}
       html=html.replace(/<script src="\/(?:history|workflow|examples)\.js[^"]*"><\/script>/g,'').replace(/<link rel="stylesheet" href="\/workflow\.css[^"]*">/g,'');
-      html=html.replace('</head>','<link rel="stylesheet" href="/workflow.css?v=45"></head>').replace('</body>','<script src="/history.js?v=45"></script><script src="/workflow.js?v=45"></script>'+(file.startsWith('effect-')?'<script src="/examples.js?v=45"></script>':'')+'</body>');
+      html=html.replace('</head>','<link rel="stylesheet" href="/workflow.css?v=46"></head>').replace('</body>','<script src="/history.js?v=46"></script><script src="/workflow.js?v=46"></script>'+(file.startsWith('effect-')?'<script src="/examples.js?v=46"></script>':'')+'</body>');
     }
 
     if(lang!=='en'){
@@ -130,13 +130,14 @@ for(const lang of languages){
       pageGraph[0].mainEntity={'@id':app['@id']};pageGraph.push(app);
     }
     html=html.replace('</head>','<script type="application/ld+json">'+JSON.stringify({'@context':'https://schema.org','@graph':pageGraph}).replace(/</g,'\\u003c')+'</script></head>');
-    html=html.replace(/\?v=(?:30|31|32|33|34|35|36|37|38|39|40|41|42|43|44)(?=")/g,'?v=45');
-    html=html.replace(/(src|href)="((?:vendor\/)?[a-z][a-z0-9.-]*\.(?:js|css)(?:\?[^" ]*)?)"/gi,(_,a,p)=>a+'="/'+p.replace(/\?v=\d+$/,'?v=45')+'"');
+    html=html.replace(/\?v=(?:30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45)(?=")/g,'?v=46');
+    html=html.replace(/(src|href)="((?:vendor\/)?[a-z][a-z0-9.-]*\.(?:js|css)(?:\?[^" ]*)?)"/gi,(_,a,p)=>a+'="/'+p.replace(/\?v=\d+$/,'?v=46')+'"');
     const alternates=languages.map(l=>'<link rel="alternate" hreflang="'+l+'" href="'+origin+route(l,file)+'">').join('\n')+'\n<link rel="alternate" hreflang="x-default" href="'+origin+route('en',file)+'">';
-    const extra='<!-- i18n-head --><link rel="stylesheet" href="/confirm.css?v=45"><script defer src="/confirm.js?v=45"></script><link rel="stylesheet" href="/activity.css?v=45"><script defer src="/activity.js?v=45"></script>'+alternates+languages.filter(l=>l!==lang).map(l=>'<meta property="og:locale:alternate" content="'+ogLocales[languages.indexOf(l)]+'">').join('')+'<link rel="stylesheet" href="/i18n.css?v=45">'+(lang==='en'?'':'<script src="/i18n/'+lang+'.js?v=45"></script>')+'<script src="/i18n.js?v=45"></script><!-- /i18n-head -->';
+    const extra='<!-- i18n-head --><link rel="stylesheet" href="/confirm.css?v=46"><script defer src="/confirm.js?v=46"></script><link rel="stylesheet" href="/activity.css?v=46"><script defer src="/activity.js?v=46"></script>'+alternates+languages.filter(l=>l!==lang).map(l=>'<meta property="og:locale:alternate" content="'+ogLocales[languages.indexOf(l)]+'">').join('')+'<link rel="stylesheet" href="/i18n.css?v=46">'+(lang==='en'?'':'<script src="/i18n/'+lang+'.js?v=46"></script>')+'<script src="/i18n.js?v=46"></script><!-- /i18n-head -->';
     html=html.replace('</head>',extra+'</head>').replace('</header>',menu(lang,file)+'</header>');
-    if(file==='studio.html'||file.startsWith('effect-')){html=html.replace(/<script src="\/mobile-studio\.js[^"]*"><\/script>/g,'');html=html.replace('</body>','<script src="/mobile-studio.js?v=45"></script></body>');}
-    html=html.replace('</head>',analyticsTag+'</head>');
+    if(file==='studio.html'||file.startsWith('effect-')){html=html.replace(/<script src="\/mobile-studio\.js[^"]*"><\/script>/g,'');html=html.replace('</body>','<script src="/mobile-studio.js?v=46"></script></body>');}
+    html=html.replace(/<link rel="stylesheet" href="\/dropdowns\.css[^"]*">/g,'');
+    html=html.replace('</head>','<link rel="stylesheet" href="/dropdowns.css?v=46">'+analyticsTag+'</head>');
     fs.writeFileSync(path.join(target,file),html);
   }
   if(lang!=='en'){
