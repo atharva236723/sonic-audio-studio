@@ -116,3 +116,5 @@ Added dropdowns.css to all 296 pages: consistent rounded controls, custom chevro
 Live shared dropdown stylesheet and v46 page references verified. Cloudflare version c1ca9e7b-c862-48a9-8cac-7de2524dab30.
 
 Waveform drag scrubbing: 19 pointer checks passed (bounds, pointer capture, cancellation, playback state, busy/loading guards). Replacement (315), workflow UI (181), mobile (220), generated workflow pages (3712), effect pages (505), and export checks (819) passed. Live app and style version 47 verified. Mouse/touch behavior checked through the event harness; physical-device interaction was not tested. Deployed version db4be694-ec74-4d38-a919-8c560ec4a0b5.
+
+AdSense publisher ca-pub-3084454492205827: exactly one async, anonymous-crossorigin loader in the head of all 296 pages; repeated build verified. Existing Analytics and 768 Cloudflare routing checks passed. Homepage, studio, Spanish home and reverb page verified live. Custom domains preserved in Wrangler configuration. Deployment 5e07b52b-13e7-4fdf-87e1-52db14489f0a.

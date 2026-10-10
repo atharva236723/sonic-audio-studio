@@ -6,6 +6,7 @@ const search=require('./i18n/search.cjs');
 const home=require('./i18n/home.cjs'),documents=require('./i18n/documents.cjs');
 const origin=(process.env.SONIC_SITE_URL||'https://sonic-audio-studio.atharva23.chatgpt.site').replace(/\/$/,'');
 const analyticsTag="<!-- google-analytics -->\n<!-- Google tag (gtag.js) -->\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=G-H1XKDD2XFL\"></script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n  gtag('config', 'G-H1XKDD2XFL');\n</script>\n<!-- /google-analytics -->";
+const adsenseTag='<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3084454492205827" crossorigin="anonymous"></script>';
 const nativeNames=['English','Español','日本語','Français','Deutsch','Português','한국어','Italiano'];
 const ogLocales=['en_US','es_ES','ja_JP','fr_FR','de_DE','pt_BR','ko_KR','it_IT'];
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -138,7 +139,8 @@ for(const lang of languages){
     if(file==='studio.html'||file.startsWith('effect-')){html=html.replace(/<script src="\/mobile-studio\.js[^"]*"><\/script>/g,'');html=html.replace('</body>','<script src="/mobile-studio.js?v=46"></script></body>');}
     html=html.replace(/<link rel="stylesheet" href="\/dropdowns\.css[^"]*">/g,'');
     html=html.replace(/(app\.js|style\.css)\?v=\d+/g,'$1?v=47');
-    html=html.replace('</head>','<link rel="stylesheet" href="/dropdowns.css?v=46">'+analyticsTag+'</head>');
+    html=html.replace(/<script\b[^>]*src=["'][^"']*pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js[^"']*["'][^>]*>\s*<\/script>/gi,'');
+    html=html.replace('</head>','<link rel="stylesheet" href="/dropdowns.css?v=46">'+analyticsTag+adsenseTag+'</head>');
     fs.writeFileSync(path.join(target,file),html);
   }
   if(lang!=='en'){
