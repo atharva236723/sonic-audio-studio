@@ -154,3 +154,7 @@ fs.writeFileSync(path.join(dist,'robots.txt'),'User-agent: *\nAllow: /\nSitemap:
 console.log('Built '+urls.length+' pages in '+languages.length+' languages with reciprocal hreflang and localized metadata.');
 
 require('./build-errors.cjs')(dist);
+
+// Copy public assets to the site root for deployment.
+const publicDir=path.join(root,'public');
+if(fs.existsSync(publicDir))fs.cpSync(publicDir,dist,{recursive:true});
